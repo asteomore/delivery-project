@@ -96,3 +96,7 @@ class PackageListSerializer(serializers.ModelSerializer):
         if obj.delivery_price_rub is None:
             return "Не рассчитано"
         return str(obj.delivery_price_rub)
+
+
+class PackageAssignCompanySerializer(serializers.Serializer):
+    company_id = serializers.IntegerField(min_value=1)

@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from django.test import override_settings
 
 from packages.models import Package
 
@@ -316,9 +317,39 @@ class TestPackagesAPI:
 @pytest.mark.django_db
 class TestDebugAPI:
     def test_recalculate_delivery_debug(self, api_client):
-        response = api_client.post("/api/v1/debug/recalculate-delivery/")
-
+        with override_settings(DEBUG=True):
+            response = api_client.post("/api/v1/debug/recalculate-delivery/")
         assert response.status_code == 202
         assert response.data["status"] is True
         assert "task_id" in response.data["data"]
         assert response.data["data"]["task_id"] is not None
+
+    def test_assign_company_only_once(self, api_client, clothing_type):
+        session = api_client.session
+        session.save()
+
+        package = Package.objects.create(
+            session_key=session.session_key,
+            session_package_id=1,
+            name="Для компании",
+            weight_kg=Decimal("1.0"),
+            content_price_usd=Decimal("50.00"),
+            package_type=clothing_type,
+        )
+
+        resp1 = api_client.post(
+            f"/api/v1/packages/{package.id}/assign-company/",
+            {"company_id": 123},
+            format="json",
+        )
+        assert resp1.status_code == 200
+        assert resp1.data["data"]["company_id"] == 123
+
+        resp2 = api_client.post(
+            f"/api/v1/packages/{package.id}/assign-company/",
+            {"company_id": 456},
+            format="json",
+        )
+        assert resp2.status_code == 409
+        assert resp2.data["status"] is False
+        assert resp2.data["error"]["code"] == "ALREADY_ASSIGNED"

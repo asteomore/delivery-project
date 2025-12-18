@@ -5,12 +5,13 @@ from django.db import transaction
 from django.db.models import Max
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import serializers, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 
 from .models import Package, PackageType
 from .serializers import (
+    PackageAssignCompanySerializer,
     PackageCreateSerializer,
     PackageDetailSerializer,
     PackageListSerializer,
@@ -156,16 +157,59 @@ class PackageDetailAPIView(RetrieveAPIView):
         return api_response(data=response.data)
 
 
+@extend_schema(
+    responses=OpenApiResponse(
+        response=None,
+        description="Привязка посылки к транспортной компании в обёртке {status, data, error}",
+    )
+)
+class PackageAssignCompanyAPIView(APIView):
+    def post(self, request, pk, *args, **kwargs):
+        serializer = PackageAssignCompanySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        company_id = serializer.validated_data["company_id"]
+
+        session_key = get_session_key(request)
+
+        with transaction.atomic():
+            try:
+                package = Package.objects.select_for_update().get(pk=pk, session_key=session_key)
+            except Package.DoesNotExist:
+                raise NotFound("Посылка не найдена или не принадлежит вашей сессии")
+
+            if package.company_id is not None:
+                return api_response(
+                    success=False,
+                    error_code="ALREADY_ASSIGNED",
+                    message="Посылка уже привязана к транспортной компании",
+                    status_code=status.HTTP_409_CONFLICT,
+                )
+
+            package.company_id = company_id
+            package.save(update_fields=["company_id"])
+
+        logger.info(
+            "Посылка привязана к компании",
+            extra={
+                "session_key": session_key,
+                "package_pk": package.pk,
+                "company_id": company_id,
+            },
+        )
+
+        return api_response(
+            data={
+                "session_package_id": package.session_package_id,
+                "company_id": package.company_id,
+            },
+            status_code=status.HTTP_200_OK,
+        )
+
+
 class DebugTaskResponseSerializer(serializers.Serializer):
     task_id = serializers.CharField()
 
 
-@extend_schema(
-    responses=OpenApiResponse(
-        response=DebugTaskResponseSerializer,
-        description="Идентификатор Celery-задачи пересчёта",
-    )
-)
 class RecalculateDeliveryDebugAPIView(APIView):
     def post(self, request, *args, **kwargs):
         if not settings.DEBUG:
