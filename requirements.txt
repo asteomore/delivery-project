@@ -1,0 +1,14 @@
+Django==6.0
+djangorestframework==3.16.1
+drf-spectacular==0.29.0
+celery==5.6.0
+redis==7.1.0
+django-redis==6.0.0
+requests==2.32.5
+mysqlclient==2.2.7
+python-dotenv==1.2.1
+gunicorn==23.0.0
+
+pytest==9.0.2
+pytest-django==4.11.1
+pytest-cov==7.0.0

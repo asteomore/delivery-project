@@ -1,0 +1,17 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.sqlite3
+.venv/
+venv/
+.env
+*.env
+logs/
+*.log
+celerybeat-schedule*
+.idea/
+.vscode/
+.DS_Store
+db.sqlite3
+delivery_service/db.sqlite3

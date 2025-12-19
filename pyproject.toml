@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "delivery-project"
+
+packages = [
+  { include = "delivery_service" },
+]
+
+
+[project]
+name = "delivery-project"
+version = "1.0.0"
+description = "Worldwide Delivery Project [Django/DRF]"
+authors = [{name = "theasuteoshi"}]
+readme = "README.md"
+requires-python = ">=3.13,<3.15"
+dependencies = [
+    "Django==6.0",
+    "djangorestframework==3.16.1",
+    "drf-spectacular==0.29.0",
+    "celery==5.6.0",
+    "redis==7.1.0",
+    "django-redis==6.0.0",
+    "requests==2.32.5",
+    "mysqlclient==2.2.7",
+    "python-dotenv==1.2.1",
+    "gunicorn==23.0.0",
+]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+pre-commit = "4.5.1"
+pytest = "9.0.2"
+pytest-django = "4.11.1"
+pytest-cov = "7.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.2.1"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["delivery_service", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+"delivery_service/packages/migrations/*.py" = ["E501"]
