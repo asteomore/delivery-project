@@ -83,7 +83,7 @@ docker-compose exec web sh -c "cd delivery_service && python manage.py createsup
 | `POST` | `/api/v1/packages/` | Создать посылку |
 | `GET` | `/api/v1/packages/` | Список посылок (с фильтрами) |
 | `GET` | `/api/v1/packages/{id}/` | Детали посылки |
-| `POST` | `/api/v1/debug/recalculate-delivery/` | Пересчёт стоимости вручную |
+| `POST` | `/api/v1/debug/recalculate-delivery/` | Пересчёт стоимости вручную (доступен только при `DEBUG=True`) |
 | `POST` | `/api/v1/packages/{id}/assign-company/` | Привязать посылку к транспортной компании |
 
 ### Примеры использования:
@@ -231,8 +231,8 @@ docker-compose exec db mysqladmin ping -h localhost -u root -prootpassword
   - Получает курс USD/RUB из Redis (или обновляет через API ЦБ РФ)
   - Рассчитывает стоимость доставки для необработанных посылок
   - Использует `select_for_update(skip_locked=True)` для предотвращения конфликтов
-  - Основной расчёт цены идёт через Celery-задачу, а дополнительный роут
-  /debug/recalculate-delivery/ позволяет руками переинициализировать перерасчёт.
+  - Основной расчёт цены идёт через Celery-задачу
+  - Отладочный эндпоинт `/api/v1/debug/recalculate-delivery/` доступен только в dev-среде (при `DEBUG=True`) и позволяет запустить пересчёт стоимости доставки вне расписания.
 
 ### Формула расчёта стоимости:
 
@@ -328,6 +328,13 @@ delivery-project/
    celery -A delivery_service worker -l info
    celery -A delivery_service beat -l info
    ```
+   
+
+## Обработка ошибок
+
+- Все ошибки API приводятся к единому формату `{status, data, error}` через глобальный обработчик исключений DRF.
+- Кастомный exception handler в `packages/exceptions.py` конвертирует стандартные и бизнес-ошибки (например, валидация, конфликт привязки компании) в структурированный ответ с кодом ошибки и HTTP-статусом.
+
 
 ## Документация API
 
