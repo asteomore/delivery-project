@@ -2,6 +2,8 @@ from django.db import models
 
 
 class PackageType(models.Model):
+    """Справочник типов посылок (одежда, электроника, разное)."""
+
     name = models.CharField(max_length=100, unique=True)
 
     class Meta:
@@ -12,6 +14,8 @@ class PackageType(models.Model):
 
 
 class Package(models.Model):
+    """Посылка, привязанная к сессии пользователя без явной авторизации."""
+
     session_key = models.CharField(max_length=150, db_index=True)
     session_package_id = models.PositiveIntegerField()
     name = models.CharField(max_length=150)

@@ -30,6 +30,8 @@ logger = logging.getLogger("packages")
     )
 )
 class PackageTypeListAPIView(ListAPIView):
+    """Список доступных типов посылок."""
+
     queryset = PackageType.objects.all()
     serializer_class = PackageTypeSerializer
 
@@ -59,6 +61,8 @@ class PackageTypeListAPIView(ListAPIView):
     ),
 )
 class PackageListCreateAPIView(ListCreateAPIView):
+    """Создание посылок и получение списка посылок текущей сессии с фильтрами и пагинацией."""
+
     def get_serializer_class(self):
         if self.request.method == "POST":
             return PackageCreateSerializer
@@ -126,6 +130,8 @@ class PackageListCreateAPIView(ListCreateAPIView):
     )
 )
 class PackageDetailAPIView(RetrieveAPIView):
+    """Детальная информация о посылке в рамках текущей сессии."""
+
     serializer_class = PackageDetailSerializer
     lookup_field = "pk"
 
@@ -164,6 +170,8 @@ class PackageDetailAPIView(RetrieveAPIView):
     )
 )
 class PackageAssignCompanyAPIView(APIView):
+    """Привязать посылку к транспортной компании с гарантией единственного исполнителя."""
+
     def post(self, request, pk, *args, **kwargs):
         serializer = PackageAssignCompanySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -211,6 +219,8 @@ class DebugTaskResponseSerializer(serializers.Serializer):
 
 
 class RecalculateDeliveryDebugAPIView(APIView):
+    """Отладочный эндпоинт для ручного пересчёта стоимости доставки при DEBUG=True."""
+
     def post(self, request, *args, **kwargs):
         if not settings.DEBUG:
             raise PermissionDenied("Этот эндпоинт доступен только в режиме DEBUG")

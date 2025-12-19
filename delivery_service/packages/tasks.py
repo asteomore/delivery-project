@@ -16,6 +16,7 @@ USD_RATE_KEY = "usd_rub_rate"
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def update_usd_rate(self):
+    """Обновить курс USD/RUB и сохранить его в Redis."""
     try:
         resp = requests.get("https://www.cbr-xml-daily.ru/daily_json.js", timeout=5)
         resp.raise_for_status()
@@ -36,6 +37,7 @@ def update_usd_rate(self):
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def update_packages_delivery_price(self):
+    """Рассчитать стоимость доставки для всех посылок без цены, используя курс из Redis."""
     try:
         try:
             rate_bytes = redis_client.get(USD_RATE_KEY)

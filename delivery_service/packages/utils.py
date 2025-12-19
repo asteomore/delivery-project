@@ -9,6 +9,7 @@ def api_response(
     status_code=200,
     extra_error_details=None,
 ):
+    """Вернуть стандартизованный JSON-ответ вида {status, data, error}."""
     body = {
         "status": success,
         "data": data if success else None,
@@ -24,6 +25,7 @@ def api_response(
 
 
 def get_session_key(request):
+    """Гарантированно получить session_key, создавая сессию при необходимости."""
     session = request.session
     if not session.session_key:
         session.save()
